@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Plus, KeyRound, Power, UserPlus, Copy, Loader2, Trash2, Users, ArrowRight } from 'lucide-react';
+import { Plus, KeyRound, Power, UserPlus, Copy, Loader2, Trash2, Users, ArrowRight, UploadCloud } from 'lucide-react';
 import { api, ApiError, type Group, type NewStudent } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useAsync } from '@/lib/hooks';
@@ -33,6 +33,7 @@ export default function Groups() {
   const canWrite = can('groups:write');
   const { data: groups, loading, reload } = useAsync(() => api.groups.list(), []);
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [addTo, setAddTo] = useState<Group | null>(null);
   const [revealed, setRevealed] = useState<{ title: string; key: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -67,7 +68,12 @@ export default function Groups() {
       <PageHeader
         title="Grupos"
         description="Cada grupo é um tenant isolado pela sua API key. A chave aparece uma única vez."
-        action={canWrite && <Button onClick={() => setCreateOpen(true)}><Plus /> Novo grupo</Button>}
+        action={canWrite && (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}><UploadCloud /> Importar turma</Button>
+            <Button onClick={() => setCreateOpen(true)}><Plus /> Novo grupo</Button>
+          </div>
+        )}
       />
 
       {loading ? (
@@ -126,6 +132,7 @@ export default function Groups() {
         </div>
       )}
 
+      {importOpen && <ImportRosterDialog onClose={() => setImportOpen(false)} onDone={() => { setImportOpen(false); reload(); }} />}
       {createOpen && <CreateGroupDialog onClose={() => setCreateOpen(false)} onCreated={(name, key) => { setCreateOpen(false); setRevealed({ title: `Chave de ${name}`, key }); reload(); }} />}
       {addTo && <AddStudentsDialog group={addTo} onClose={() => setAddTo(null)} onDone={() => { setAddTo(null); reload(); }} />}
       {revealed && <RevealKeyDialog title={revealed.title} apiKey={revealed.key} onClose={() => setRevealed(null)} />}
@@ -257,6 +264,45 @@ function AddStudentsDialog({ group, onClose, onDone }: { group: Group; onClose: 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={save} disabled={saving || (mode === 'bulk' && bulk.length === 0)}>{saving && <Loader2 className="animate-spin" />} Adicionar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// --------------------------------------------- Importar turma inteira (sem grupo)
+function ImportRosterDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [students, setStudents] = useState<NewStudent[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await api.students.import(students);
+      const skipped = res.skipped.length;
+      toast.success(`${res.created} aluno(s) criado(s)${skipped ? ` · ${skipped} já existia(m)` : ''}`);
+      onDone();
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : 'Falha ao importar');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Importar turma</DialogTitle>
+          <DialogDescription>
+            Cria só o <strong>login</strong> de cada aluno (senha inicial = RM), <strong>sem grupo</strong>. Depois cada aluno
+            cria a própria loja e vincula os colegas por RM nas configurações. RMs já cadastrados são ignorados.
+          </DialogDescription>
+        </DialogHeader>
+        <StudentsImport onChange={setStudents} />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={save} disabled={saving || students.length === 0}>{saving && <Loader2 className="animate-spin" />} Importar {students.length || ''} aluno(s)</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

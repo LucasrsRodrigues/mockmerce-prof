@@ -101,6 +101,12 @@ export const api = {
     addStudents: (id: string, students: NewStudent[]) => request<{ added: number }>('POST', `/admin/groups/${id}/students`, { students }),
   },
 
+  // Importa a turma inteira SÓ com login (sem grupo). Cada aluno cria/entra na loja
+  // depois, pelo próprio painel. Idempotente: RMs já existentes voltam em `skipped`.
+  students: {
+    import: (students: NewStudent[]) => request<{ created: number; skipped: string[] }>('POST', '/admin/students', { students }),
+  },
+
   // "Entrar no grupo": inspeção read-only do que cada grupo está fazendo.
   inspect: {
     overview: (id: string) => request<GroupOverview>('GET', `/admin/groups/${id}/overview`),
