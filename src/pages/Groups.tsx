@@ -16,6 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { StudentsImport } from '@/components/StudentsImport';
+import { ImportRosterDialog } from '@/components/ImportRosterDialog';
 
 type Mode = 'manual' | 'bulk';
 
@@ -264,45 +265,6 @@ function AddStudentsDialog({ group, onClose, onDone }: { group: Group; onClose: 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={save} disabled={saving || (mode === 'bulk' && bulk.length === 0)}>{saving && <Loader2 className="animate-spin" />} Adicionar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// --------------------------------------------- Importar turma inteira (sem grupo)
-function ImportRosterDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
-  const [students, setStudents] = useState<NewStudent[]>([]);
-  const [saving, setSaving] = useState(false);
-
-  async function save() {
-    setSaving(true);
-    try {
-      const res = await api.students.import(students);
-      const skipped = res.skipped.length;
-      toast.success(`${res.created} aluno(s) criado(s)${skipped ? ` · ${skipped} já existia(m)` : ''}`);
-      onDone();
-    } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : 'Falha ao importar');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Importar turma</DialogTitle>
-          <DialogDescription>
-            Cria só o <strong>login</strong> de cada aluno (senha inicial = RM), <strong>sem grupo</strong>. Depois cada aluno
-            cria a própria loja e vincula os colegas por RM nas configurações. RMs já cadastrados são ignorados.
-          </DialogDescription>
-        </DialogHeader>
-        <StudentsImport onChange={setStudents} />
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={save} disabled={saving || students.length === 0}>{saving && <Loader2 className="animate-spin" />} Importar {students.length || ''} aluno(s)</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

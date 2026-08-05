@@ -104,6 +104,7 @@ export const api = {
   // Importa a turma inteira SÓ com login (sem grupo). Cada aluno cria/entra na loja
   // depois, pelo próprio painel. Idempotente: RMs já existentes voltam em `skipped`.
   students: {
+    list: () => request<StudentRow[]>('GET', '/admin/students'),
     import: (students: NewStudent[]) => request<{ created: number; skipped: string[] }>('POST', '/admin/students', { students }),
   },
 
@@ -142,6 +143,7 @@ export const api = {
 
 // ---- Tipos ----
 export interface NewStudent { rm: string; name: string }
+export interface StudentRow { rm: string; name: string; jaAcessou: boolean; groupId: string | null; group: string | null; createdAt: string }
 export interface Paginated<T> { data: T[]; page: number; pageSize: number; total: number }
 
 export interface Group {

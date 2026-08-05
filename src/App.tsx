@@ -4,6 +4,7 @@ import AppShell from '@/components/layout/AppShell';
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import Groups from '@/pages/Groups';
+import Students from '@/pages/Students';
 import GroupDetail from '@/pages/GroupDetail';
 import Activity from '@/pages/Activity';
 import Logs from '@/pages/Logs';
@@ -24,6 +25,7 @@ export default function App() {
       <Route element={<Protected><AppShell /></Protected>}>
         <Route index element={<Dashboard />} />
         <Route path="grupos" element={<Groups />} />
+        <Route path="alunos" element={<Students />} />
         <Route path="grupos/:id" element={<GroupDetail />} />
         <Route path="participacao" element={<Activity />} />
         <Route path="logs" element={<Logs />} />

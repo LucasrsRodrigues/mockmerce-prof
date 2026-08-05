@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, Activity, ScrollText, GraduationCap, ShieldCheck, History, LogOut, GraduationCap as Logo, KeyRound } from 'lucide-react';
+import { LayoutDashboard, Users, UserRound, Activity, ScrollText, GraduationCap, ShieldCheck, History, LogOut, GraduationCap as Logo, KeyRound } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, perm: 'activity:read' },
   { to: '/grupos', label: 'Grupos', icon: Users, perm: 'groups:read' },
+  { to: '/alunos', label: 'Alunos', icon: UserRound, perm: 'groups:read' },
   { to: '/participacao', label: 'Participação', icon: Activity, perm: 'activity:read' },
   { to: '/logs', label: 'Logs', icon: ScrollText, perm: 'logs:read' },
   { to: '/turma', label: 'Turma', icon: GraduationCap, perm: 'activity:read' },
