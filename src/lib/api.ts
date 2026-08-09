@@ -106,6 +106,12 @@ export const api = {
   students: {
     list: () => request<StudentRow[]>('GET', '/admin/students'),
     import: (students: NewStudent[]) => request<{ created: number; skipped: string[] }>('POST', '/admin/students', { students }),
+    update: (rm: string, data: { name?: string; groupId?: string | null }) =>
+      request<StudentRow>('PATCH', `/admin/students/${encodeURIComponent(rm)}`, data),
+    // password vazio → volta ao 1º acesso (senha = RM); com password → senha específica.
+    resetPassword: (rm: string, password?: string) =>
+      request<{ rm: string; reset: boolean; toRm: boolean }>('POST', `/admin/students/${encodeURIComponent(rm)}/reset-password`, password ? { password } : {}),
+    remove: (rm: string) => request<void>('DELETE', `/admin/students/${encodeURIComponent(rm)}`),
   },
 
   // "Entrar no grupo": inspeção read-only do que cada grupo está fazendo.
@@ -143,7 +149,7 @@ export const api = {
 
 // ---- Tipos ----
 export interface NewStudent { rm: string; name: string }
-export interface StudentRow { rm: string; name: string; jaAcessou: boolean; groupId: string | null; group: string | null; createdAt: string }
+export interface StudentRow { rm: string; name: string; jaAcessou: boolean; mustChangePassword?: boolean; groupId: string | null; group: string | null; createdAt: string }
 export interface Paginated<T> { data: T[]; page: number; pageSize: number; total: number }
 
 export interface Group {
