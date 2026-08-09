@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UploadCloud, Search, UserRound, Pencil, KeyRound, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,9 +14,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Pagination } from '@/components/Pagination';
 import { ImportRosterDialog } from '@/components/ImportRosterDialog';
 
 type Filter = 'todos' | 'sem-grupo' | 'com-grupo';
+const PAGE_SIZE = 20;
 
 export default function Students() {
   const { can } = useAuth();
@@ -26,6 +28,7 @@ export default function Students() {
   const [importOpen, setImportOpen] = useState(false);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('todos');
+  const [page, setPage] = useState(1);
   // Diálogo de ação sobre um aluno específico.
   const [action, setAction] = useState<{ type: 'edit' | 'reset' | 'delete'; student: StudentRow } | null>(null);
 
@@ -47,6 +50,16 @@ export default function Students() {
     if (term) list = list.filter((s) => s.name.toLowerCase().includes(term) || s.rm.toLowerCase().includes(term));
     return list;
   }, [data, filter, q]);
+
+  // Volta pra 1ª página quando muda busca/filtro; corrige a página se a lista
+  // encolher (ex.: remover o último aluno da última página).
+  useEffect(() => { setPage(1); }, [q, filter]);
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    if (page > pages) setPage(pages);
+  }, [rows.length, page]);
+
+  const paged = useMemo(() => rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [rows, page]);
 
   return (
     <div className="space-y-4">
@@ -95,7 +108,7 @@ export default function Students() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.length ? rows.map((s) => (
+                {paged.length ? paged.map((s) => (
                   <StudentRowItem key={s.rm} s={s} canWrite={canWrite} onAction={(type) => setAction({ type, student: s })} />
                 )) : (
                   <TableRow><TableCell colSpan={canWrite ? 5 : 4} className="py-10 text-center text-muted-foreground">
@@ -106,6 +119,7 @@ export default function Students() {
               </TableBody>
             </Table>
           )}
+          {!loading && <Pagination page={page} pageSize={PAGE_SIZE} total={rows.length} onChange={setPage} />}
         </CardContent>
       </Card>
 
