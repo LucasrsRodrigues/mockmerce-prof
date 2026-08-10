@@ -98,7 +98,8 @@ export const api = {
       ),
     rotateKey: (id: string) => request<{ id: string; apiKey: string }>('POST', `/admin/groups/${id}/rotate-key`),
     setActive: (id: string, active: boolean) => request<{ id: string; active: boolean }>('PATCH', `/admin/groups/${id}`, { active }),
-    addStudents: (id: string, students: NewStudent[]) => request<{ added: number }>('POST', `/admin/groups/${id}/students`, { students }),
+    addStudents: (id: string, students: NewStudent[], confirmMove = false) =>
+      request<AddStudentsResult>('POST', `/admin/groups/${id}/students`, { students, confirmMove }),
   },
 
   // Importa a turma inteira SÓ com login (sem grupo). Cada aluno cria/entra na loja
@@ -149,6 +150,10 @@ export const api = {
 
 // ---- Tipos ----
 export interface NewStudent { rm: string; name: string }
+// addStudents: aplicou (added/moved), ou há RM(s) em outra loja aguardando confirmação.
+export type AddStudentsResult =
+  | { added: number; moved?: number; needsConfirmation?: undefined }
+  | { needsConfirmation: true; conflicts: { rm: string; name: string; currentGroup: { id: string; name: string } }[] };
 export interface StudentRow { rm: string; name: string; jaAcessou: boolean; mustChangePassword?: boolean; groupId: string | null; group: string | null; createdAt: string }
 export interface Paginated<T> { data: T[]; page: number; pageSize: number; total: number }
 

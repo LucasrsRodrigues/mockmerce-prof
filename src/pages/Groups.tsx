@@ -224,13 +224,24 @@ function AddStudentsDialog({ group, onClose, onDone }: { group: Group; onClose: 
   const [saving, setSaving] = useState(false);
   const setStudent = (i: number, patch: Partial<NewStudent>) => setStudents((s) => s.map((st, idx) => (idx === i ? { ...st, ...patch } : st)));
 
-  async function save() {
+  async function save(confirmMove = false) {
     setSaving(true);
     try {
       const clean = mode === 'bulk' ? bulk : students.map((s) => ({ rm: s.rm.trim(), name: s.name.trim() })).filter((s) => s.rm && s.name);
       if (!clean.length) return onClose();
-      await api.groups.addStudents(group.id, clean);
-      toast.success(`${clean.length} aluno(s) adicionado(s)`);
+      const res = await api.groups.addStudents(group.id, clean, confirmMove);
+      if ('needsConfirmation' in res && res.needsConfirmation) {
+        const list = res.conflicts.map((c) => `• ${c.name} (${c.rm}) — hoje na loja "${c.currentGroup.name}"`).join('\n');
+        const ok = confirm(
+          `Estes alunos já pertencem a outra loja:\n\n${list}\n\n` +
+          `Mover todos para "${group.name}"? Eles serão desvinculados da loja atual. ` +
+          `O histórico gerado por eles (logs, XP e missões) permanece com a loja de origem.`,
+        );
+        if (ok) return save(true);
+        return; // migração cancelada
+      }
+      const moved = 'moved' in res && res.moved ? res.moved : 0;
+      toast.success(`${res.added} adicionado(s)${moved ? ` · ${moved} movido(s)` : ''}`);
       onDone();
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : 'Falha');
@@ -264,7 +275,7 @@ function AddStudentsDialog({ group, onClose, onDone }: { group: Group; onClose: 
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={save} disabled={saving || (mode === 'bulk' && bulk.length === 0)}>{saving && <Loader2 className="animate-spin" />} Adicionar</Button>
+          <Button onClick={() => save()} disabled={saving || (mode === 'bulk' && bulk.length === 0)}>{saving && <Loader2 className="animate-spin" />} Adicionar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
