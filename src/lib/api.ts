@@ -123,7 +123,11 @@ export const api = {
     order: (id: string, orderId: string) => request<InspectOrderDetail>('GET', `/admin/groups/${id}/orders/${orderId}`),
     customers: (id: string, p: Record<string, unknown> = {}) => request<Paginated<InspectCustomer>>('GET', `/admin/groups/${id}/customers${qs(p)}`),
     webhooks: (id: string) => request<InspectWebhook[]>('GET', `/admin/groups/${id}/webhooks`),
+    push: (id: string) => request<GroupPush>('GET', `/admin/groups/${id}/push`),
   },
+
+  /** Quem da turma está pronto para receber push (uma linha por grupo). */
+  pushReadiness: () => request<PushReadiness[]>('GET', '/admin/push/readiness'),
 
   dashboard: (days = 14) => request<ClassDashboard>('GET', `/admin/dashboard${qs({ days })}`),
 
@@ -263,4 +267,40 @@ export interface GroupDashboard {
     lista: { key: string; title: string; description: string; phase: string; points: number; cumprida: boolean; porRm: string | null }[];
   };
   proximosPassos: string[];
+}
+
+// ---- Push (FCM) ----
+/**
+ * O semáforo exige os dois lados: credencial aceita pelo Google E aparelho
+ * registrado. Ter só um dos dois não entrega notificação nenhuma.
+ */
+export type EstadoPush = 'pronto' | 'sem-credencial' | 'credencial-recusada' | 'sem-aparelho';
+
+export interface PushCredencial {
+  projectId: string;
+  ok: boolean | null;
+  verificadaEm: string | null;
+  mensagem: string | null;
+}
+
+export interface PushReadiness {
+  groupId: string;
+  name: string;
+  credencial: PushCredencial | null;
+  aparelhos: { ativos: number; inativos: number };
+  envios: { total: number; porStatus: Record<string, number>; ultimoEm: string | null };
+  estado: EstadoPush;
+}
+
+export interface GroupPush {
+  group: { id: string; name: string };
+  credencial: (PushCredencial & { clientEmail: string; atualizadaEm: string }) | null;
+  aparelhos: {
+    id: string; platform: string; deviceName: string | null; appVersion: string | null;
+    active: boolean; disabledReason: string | null; lastSeenAt: string; customerId: string | null;
+  }[];
+  envios: {
+    id: string; title: string | null; kind: string; status: string; reason: string | null;
+    errorCode: string | null; errorDetail: string | null; createdAt: string;
+  }[];
 }

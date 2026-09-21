@@ -9,6 +9,7 @@ import GroupDetail from '@/pages/GroupDetail';
 import Activity from '@/pages/Activity';
 import Logs from '@/pages/Logs';
 import Teaching from '@/pages/Teaching';
+import Push from '@/pages/Push';
 import Operators from '@/pages/Operators';
 import Audit from '@/pages/Audit';
 
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="grupos/:id" element={<GroupDetail />} />
         <Route path="participacao" element={<Activity />} />
         <Route path="logs" element={<Logs />} />
+        <Route path="push" element={<Push />} />
         <Route path="turma" element={<Teaching />} />
         <Route path="operadores" element={<Operators />} />
         <Route path="auditoria" element={<Audit />} />

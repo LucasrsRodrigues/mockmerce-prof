@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, UserRound, Activity, ScrollText, GraduationCap, ShieldCheck, History, LogOut, GraduationCap as Logo, KeyRound } from 'lucide-react';
+import { Activity, BellRing, GraduationCap, GraduationCap as Logo, History, KeyRound, LayoutDashboard, LogOut, ScrollText, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/alunos', label: 'Alunos', icon: UserRound, perm: 'groups:read' },
   { to: '/participacao', label: 'Participação', icon: Activity, perm: 'activity:read' },
   { to: '/logs', label: 'Logs', icon: ScrollText, perm: 'logs:read' },
+  { to: '/push', label: 'Push', icon: BellRing, perm: 'groups:read' },
   { to: '/turma', label: 'Turma', icon: GraduationCap, perm: 'activity:read' },
   { to: '/operadores', label: 'Operadores', icon: ShieldCheck, perm: 'operators:read' },
   { to: '/auditoria', label: 'Auditoria', icon: History, perm: 'audit:read' },
